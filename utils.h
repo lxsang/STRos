@@ -28,6 +28,17 @@
 #endif
 #define	BUFFLEN 1024
 #define HASHSIZE 1024
+			
+#define RPC_TYPE_ARRAY	601//hash("array")
+#define RPC_TYPE_BASE64	335//hash("base64")
+#define RPC_TYPE_BOOL	40//hash("boolean")
+#define RPC_TYPE_DOUBLE	977//hash("double")
+#define RPC_TYPE_DATE	49//hash("dateTime.iso8601")
+#define RPC_TYPE_INT	1007//hash("int")
+#define RPC_TYPE_I4		235//hash("i4")
+#define RPC_TYPE_STRING	17//hash("string")
+#define RPC_TYPE_NIL	529//hash("nil")
+			
 char* __s(const char*,...);
 void trim(char*,const char);
 void removeAll(const char* path,int mode);

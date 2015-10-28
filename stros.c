@@ -25,23 +25,7 @@ static int config_handler(void* conf, const char* section, const char* name,
     }
     return 1;
 }
-void init_file_system()
-{
-	/*struct stat st;
-	if (stat(server_config.plugins_dir, &st) == -1)
-   		mkdir(server_config.plugins_dir, 0755);
-   	if (stat(server_config.db_path, &st) == -1)
-   		mkdir(server_config.db_path, 0755);
-   	if (stat(server_config.htdocs, &st) == -1)
-   		mkdir(server_config.htdocs, 0755);
-   	if (stat(server_config.tmpdir, &st) == -1)
-   		mkdir(server_config.tmpdir, 0755);
-   	else
-   	{
-   		removeAll(server_config.tmpdir,0);
-   	}
-*/
-}
+
 void load_config(const char* file)
 {
 	server_config.port = 0;

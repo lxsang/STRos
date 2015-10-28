@@ -1,47 +1,9 @@
 #include "request.h"
-/**
- * read the request as a string line format
- * @param  sock socket
- * @return      a request string
- */
-char* read_line(int sock)
-{
-	char buf[MAX_BUFF];
-	read_buf(sock,buf,sizeof(buf));
-	return strdup(buf);
-}
-/**
- * Read the socket request in to a buffer or size
- * The data is read until the buffer is full or
- * there are a carrier return character
- * @param  sock socket
- * @param  buf  buffer
- * @param  size size of buffer
- * @return      number of bytes read
- */
-int read_buf(int sock, char*buf,int size)
-{
-	int i = 0;
-	char c = '\0';
-	int n;
-	while ((i < size - 1) && (c != '\n'))
-	{
-		n = recv(sock, &c, 1, 0);
-		if (n > 0)
-		{
-			buf[i] = c;
-			i++;
-		}
-		else
-			c = '\n';
-	}
-	buf[i] = '\0';
-	return i;
-}
+
 void parse_request(int client,const char* uri)
 {
 	XMLDoc doc;
-	char* request = decode_request(client);
+	char* request = decode_rpc_data(client);
 	if(request == NULL)
 	{
 		bad_request(client);
@@ -65,59 +27,26 @@ void parse_request(int client,const char* uri)
 		bad_request(client);
 		return;
 	}
-	rpc_request_t* m = parse_rpc_request(node);
+	rpc_request_t* m = parse_rpc_method(node);
 	if(m)
-		dump_rpc_request(m);
+	{
+		dump_rpc_method(m);
+		free_request(m);
+	}
 	else
 		LOG("%s","Fail to parse the method\n");
 	XMLDoc_free(&doc);
 	dummy_response(client);
 	
 }
-void dump_rpc_request(rpc_request_t* m)
+void dump_rpc_method(rpc_request_t* m)
 {
 	printf("Method name %s\n", m->method);
 	printf("Params:\n");
-	for(size_t i = 0; i < m->n_params; ++i)
-	{
-		dump_rpc_param(m->params[i],"\t");
-	}
+	printf("[%s]\n",as_string(m->params));
 }
-void dump_rpc_param(rpc_param_t p, const char* prefix)
-{
-	switch(p.type)
-	{
-		case RPC_TYPE_BASE64:
-		printf("%sBase64:%s\n", prefix,p.value.b64);
-		break;
-		
-		case RPC_TYPE_BOOL:
-		printf("%sBool:%d\n", prefix,p.value.b);
-		break;
-		
-		case RPC_TYPE_DOUBLE:
-		printf("%sDouble:%lf\n", prefix,p.value.d);
-		break;
-		
-		case RPC_TYPE_DATE:
-		printf("%sDate:%s\n", prefix,p.value.date);
-		break;
-		
-		case RPC_TYPE_INT:
-		case RPC_TYPE_I4:
-		printf("%sInt:%d\n", prefix,p.value.i);
-		break;
-		
-		case RPC_TYPE_STRING:
-		printf("%string:%s\n", prefix,p.value.s);
-		break;
-		
-		default:
-		LOG("Nil value detected\n");
-		break;
-	}
-}
-rpc_request_t* parse_rpc_request(XMLNode* mnode)
+
+rpc_request_t* parse_rpc_method(XMLNode* mnode)
 {
 	XMLNode* node;
 	// find method name
@@ -135,65 +64,20 @@ rpc_request_t* parse_rpc_request(XMLNode* mnode)
 	// collect the params
 	//node = node->children[0];
 	req->n_params = node->n_children;
+	req->params = list_init();
 	for(size_t i = 0; i < node->n_children; ++i)
 	{
 		if(strcmp(node->children[i]->tag,"param") != 0) {free(req);return NULL;}
-		req->params[i] = parse_rpc_param(node->children[i]);
+		parse_rpc_value(&req->params,node->children[i]);
 	}
 	return req;
 }
-rpc_param_t parse_rpc_param(XMLNode* pnode)
-{
-	XMLNode* node;
-	rpc_param_t param={.type=RPC_TYPE_NIL};
-	if (pnode->n_children <= 0 || strcmp(pnode->children[0]->tag,"value") != 0) return param;
-	node = pnode->children[0];
-	if(node->n_children <= 0) return param;
-	node = node->children[0];
-	switch(hash(node->tag))
-	{
-		case RPC_TYPE_BASE64:
-		param.type = RPC_TYPE_BASE64;
-		param.value.b64 = strdup(node->text);
-		break;
-		
-		case RPC_TYPE_BOOL:
-		param.type = RPC_TYPE_BOOL;
-		param.value.b = atoi(node->text);
-		break;
-		
-		case RPC_TYPE_DOUBLE:
-		param.type = RPC_TYPE_DOUBLE;
-		sscanf(node->text, "%lf", &param.value.d);
-		break;
-		
-		case RPC_TYPE_DATE:
-		param.type = RPC_TYPE_DATE;
-		param.value.date = strdup(node->text);
-		break;
-		
-		case RPC_TYPE_INT:
-		case RPC_TYPE_I4:
-		param.type = RPC_TYPE_INT;
-		param.value.i = atoi(node->text);
-		break;
-		
-		case RPC_TYPE_STRING:
-		param.type = RPC_TYPE_STRING;
-		param.value.s = strdup(node->text);
-		break;
-		
-		default:
-		LOG("This type is not support yet : %s\n",node->tag);
-		break;
-	}
-	return param;
-}
-char* send_post_request(const char* ip, int port, const char* data)
+
+rpc_response_t* send_post_request(const char* ip, int port, const char* data)
 {
 	int sockfd, bytes_read;
 	struct sockaddr_in dest;
-	char* rdata = "";
+	rpc_response_t* rdata = NULL;
 	char buf[MAX_BUFF];
 	char* request;
 	if ( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
@@ -216,60 +100,27 @@ char* send_post_request(const char* ip, int port, const char* data)
 	}
     request = __s(REQUEST_PATTERN, strlen(data), data);
 	send(sockfd,request, strlen(request),0);
-	do
-	{
-		 bzero(buf, sizeof(buf));
-		 bytes_read = recv(sockfd, buf, sizeof(buf), 0);
-		 if(bytes_read >0)
-			 rdata = __s("%s%s",rdata,buf);
-	} while(bytes_read>0);
+	rdata = parse_response(sockfd);
+	// do
+// 	{
+// 		 bzero(buf, sizeof(buf));
+// 		 bytes_read = recv(sockfd, buf, sizeof(buf), 0);
+// 		 if(bytes_read >0)
+// 			 rdata = __s("%s%s",rdata,buf);
+// 	} while(bytes_read>0);
 	close(sockfd);
 	return rdata;
 }
-/**
- * Decode the HTTP request
- * if it is a POST, check the content type of the request
- * 		- if it is a POST request with URL encoded : decode the url encode
- * @param  client socket client
- * @return        a xml string
- */
-char* decode_request(int client)
+void free_request(rpc_request_t* r)
 {
-	char* request = NULL;
-	char* line;
-	char * token;
-	char* ctype = NULL;
-	int clen = -1;
-	line = read_line(client);
-	while ((strlen(line) > 0) && strcmp("\r\n",line))
-	{
-		token = strsep(&line,":");
-		trim(token,' ');
-		if(token != NULL &&strcasecmp(token,"Content-Type") == 0)
-		{
-			ctype = strsep(&line,":");
-			trim(ctype,' ');
-			trim(ctype,'\n');
-			trim(ctype,'\r');
-		} else if(token != NULL &&strcasecmp(token,"Content-Length") == 0)
-		{
-			token = strsep(&line,":");
-			trim(token,' ');
-			clen = atoi(token);
-		}
-		line = read_line(client);
-	}
-	free(line);
-	if(ctype == NULL || clen == -1)
-	{
-		LOG("Bad request\n");
-		return NULL;
-	}
-	LOG("Content-type: %s",ctype);
-	// decide what to do with the data
-	//get xml string
-	request = (char*) malloc(clen*sizeof(char));
-	for(size_t i = 0; i < clen; ++i)
-		recv(client,(request+i),1,0);
-	return request;
+	if(r->params != NULL)
+		list_free(&r->params);
+	free(r);
+}
+char* gen_rpc_call(rpc_request_t* rq)
+{
+	char* xmldoc = __s(XML_METHOD, rq->method);
+	xmldoc = __s("%s%s",xmldoc,list_to_xml_params(rq->params));
+	xmldoc = __s(XML_RPC_CALL,xmldoc);
+	return __s("%s%s",XML_VER,xmldoc);
 }
