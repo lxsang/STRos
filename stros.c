@@ -1,7 +1,5 @@
 #include "stros.h"
 
-static int server_sock = -1;
-
 #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
 void error_die(const char *sc)
 {
@@ -9,44 +7,54 @@ void error_die(const char *sc)
 	exit(1);
 }
 
-static int config_handler(void* conf, const char* section, const char* name,
+static int config_handler(void* node, const char* section, const char* name,
                    const char* value)
 {
-    config_t* pconfig = (config_t*)conf;
+    ros_node_t* pconfig = (ros_node_t*)node;
 
-    if (MATCH("SERVER", "port")) {
-        pconfig->port = atoi(value);
-    } else if (MATCH("SERVER", "master_url")) {
-        pconfig->master_url = strdup(value);
-    } else if (MATCH("SERVER", "master_port")) {
-        pconfig->master_port = atoi(value);
+    if (MATCH("MASTER", "api")) {
+        pconfig->master = strdup(value);
+    } else if (MATCH("NODE", "remap")) {
+        pconfig->id = strdup(value);
     }else {
         return 0;  /* unknown section/name, error */
     }
     return 1;
 }
-
-void load_config(const char* file)
+à
+void load_config(ros_node_t* node,const char* file)
 {
-	server_config.port = 0;
-	server_config.master_url = "127.0.0.1";
-	server_config.master_port = 3113;
-	if (ini_parse(file, config_handler, &server_config) < 0) {
+	if (ini_parse(file, config_handler, node) < 0) {
 		LOG("Can't load '%s'\n. Used defaut configuration", file);
 	}
 	else
 	{
-		LOG("Using configuration : %s\n", file);
+		LOG("Using node configuration : %s\n", file);
 	}
 	// if needed
 	init_file_system();
 }
-void stop_serve(int dummy) {
-	if(server_sock > 0)
-		close(server_sock);
+void stros_stop(int dummy) {
+	ros_ok = 0;
+	// wait for other thread stop to exit
+	//...
 	exit(0);
 }
-
+void stros_init_node(ros_node_t* node, const char* name, const char* conf)
+{
+	if(name == NULL) 
+	{ 
+		LOG("%s", "The node name can not be NULL \n");
+		exit(1);
+	}
+	node->id = NULL;
+	node->master = DEFAULT_MASTER;
+	node->subscribers = dict();
+	node->publishers = dict();
+	if(conf != NULL)
+		load_config(node,conf);
+	ros_ok = 1;
+}
 void accept_request(int client)
 {
 	char buf[MAX_BUFF];
@@ -84,30 +92,25 @@ void accept_request(int client)
 		parse_request(client, url);
 	close(client);
 }
-
-int main(int argc, char* argv[])
+void stros_node_deploy(ros_node_t node)
 {
-// load the config first
-	if(argc==1)
-		load_config(CONFIG);
-	else
-		load_config(argv[1]);
-
-	unsigned port = server_config.port;
+	// ignore the broken PIPE error when writing 
+	//or reading to/from a closed socked connection
+	signal(SIGPIPE, stros_stop);
+	signal(SIGINT, stros_stop);
+}
+int xmlprc_run()
+{
+	unsigned port = 0;
 	int client_sock = -1;
+	int server_sock = -1;
 	struct sockaddr_in client_name;
 	socklen_t client_name_len = sizeof(client_name);
 	pthread_t newthread;
 
-	// ignore the broken PIPE error when writing 
-	//or reading to/from a closed socked connection
-	signal(SIGPIPE, SIG_IGN);
-	signal(SIGABRT, SIG_IGN);
-	signal(SIGINT, stop_serve);
-	server_sock = startup(&port);
-	LOG("httpd running on port %d\n", port);
-
-	while (1)
+	server_sock = xmlprc_startup(&port);
+	LOG("xmlprc running on port %d\n", port);
+	while (stros_ok())
 	{
 		client_sock = accept(server_sock,(struct sockaddr *)&client_name,&client_name_len);
 		if (client_sock == -1)
@@ -129,7 +132,7 @@ int main(int argc, char* argv[])
 
 	return(0);
 }
-int startup(unsigned *port)
+int xmlprc_startup(unsigned *port)
 {
 	int httpd = 0;
 	struct sockaddr_in name;

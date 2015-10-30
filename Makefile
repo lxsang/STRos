@@ -20,6 +20,9 @@ client:$(OBJS)
 
 list: list.o utils.o
 	$(CC) $(CFLAGS) list.o utils.o  -o $(BUILDIRD)/test_list test/test_list.c
+
+dict: list.o utils.o dictionary.o
+	$(CC) $(CFLAGS)  list.o utils.o dictionary.o -o $(BUILDIRD)/test_dict test/test_dict.c
 clean: 
 	rm -rf *.o test/*.o $(BUILDIRD)/*
 .PRECIOUS: %.o

@@ -18,13 +18,4 @@
 #define SERVER_STRING "Server: stros-xmlprc\r\n"
 #define RPC_URI "/RPC2"
 
-
-typedef struct  { 
-	int port;
-    char *master_url; 
-    int master_port;
-}config_t;
-
-config_t server_config;
-
 #endif
