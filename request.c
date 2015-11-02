@@ -1,6 +1,6 @@
 #include "request.h"
 
-void parse_request(int client,const char* uri)
+void parse_request(int client,const char* uri,void (*handler)(int,void*))
 {
 	XMLDoc doc;
 	char* request = decode_rpc_data(client);
@@ -9,7 +9,7 @@ void parse_request(int client,const char* uri)
 		bad_request(client);
 		return;
 	}
-	printf("Received:\n%s\n",request);
+	//printf("Received:\n%s\n",request);
 	// parse the xml
 	XMLDoc_init(&doc);
 	if(!XMLDoc_parse_buffer_DOM(request,"xmlprc_request",&doc))
@@ -28,16 +28,25 @@ void parse_request(int client,const char* uri)
 		return;
 	}
 	rpc_request_t* m = parse_rpc_method(node);
-	if(m)
+	if(!m)
+	//	dump_rpc_method(m);
+	//else
 	{
-		dump_rpc_method(m);
-		free_request(m);
-	}
-	else
 		LOG("%s","Fail to parse the method\n");
+		bad_request(client);
+		return;
+	}
 	XMLDoc_free(&doc);
-	dummy_response(client);
+	if(handler == NULL)
+	{
+		LOG("%s","Send a dummy response\n");
+		dummy_response(client);
+		free_request(m);
+		return;
+	}
 	
+	handler(client,m);
+	free_request(m);
 }
 void dump_rpc_method(rpc_request_t* m)
 {
@@ -72,44 +81,58 @@ rpc_request_t* parse_rpc_method(XMLNode* mnode)
 	}
 	return req;
 }
-
-rpc_response_t* send_post_request(const char* ip, int port, const char* data)
+int request_socket(const char* ip, int port)
 {
 	int sockfd, bytes_read;
 	struct sockaddr_in dest;
-	rpc_response_t* rdata = NULL;
 	char buf[MAX_BUFF];
 	char* request;
+	// time out setting
+	struct timeval timeout;      
+	timeout.tv_sec = CONN_TIME_OUT_S;
+	timeout.tv_usec = 0;
 	if ( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
 	{
 		perror("Socket");
-		return NULL;
+		return -1;
 	}
+	if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,sizeof(timeout)) < 0)
+	        perror("setsockopt failed\n");
+
+    if (setsockopt (sockfd, SOL_SOCKET, SO_SNDTIMEO, (char *)&timeout,sizeof(timeout)) < 0)
+        perror("setsockopt failed\n");
+	
     bzero(&dest, sizeof(dest));
     dest.sin_family = AF_INET;
     dest.sin_port = htons(port);
     if ( inet_aton(ip, &dest.sin_addr.s_addr) == 0 )
     {
 		perror(ip);
-		return NULL;
+		close(sockfd);
+		return -1;
     }
 	if ( connect(sockfd, (struct sockaddr*)&dest, sizeof(dest)) != 0 )
 	{
+		close(sockfd);
 		perror("Connect");
-		return NULL;
+		return -1;
 	}
-    request = __s(REQUEST_PATTERN, strlen(data), data);
-	send(sockfd,request, strlen(request),0);
-	rdata = parse_response(sockfd);
-	// do
-// 	{
-// 		 bzero(buf, sizeof(buf));
-// 		 bytes_read = recv(sockfd, buf, sizeof(buf), 0);
-// 		 if(bytes_read >0)
-// 			 rdata = __s("%s%s",rdata,buf);
-// 	} while(bytes_read>0);
-	close(sockfd);
-	return rdata;
+	return sockfd;
+}
+rpc_response_t* send_post_request(const char* ip, int port, const char* data)
+{
+	int sockfd, bytes_read;
+	rpc_response_t* rdata = NULL;
+	char* request;
+	if((sockfd = request_socket(ip, port)) != -1)
+	{
+    	request = __s(REQUEST_PATTERN, strlen(data), data);
+		send(sockfd,request, strlen(request),0);
+		rdata = parse_response(sockfd);
+		close(sockfd);
+		return rdata;
+	}
+	return NULL;
 }
 void free_request(rpc_request_t* r)
 {

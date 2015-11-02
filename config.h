@@ -17,5 +17,6 @@
 #define IS_SPACE(x) isspace((int)(x))
 #define SERVER_STRING "Server: stros-xmlprc\r\n"
 #define RPC_URI "/RPC2"
+#define CONN_TIME_OUT_S 3
 
 #endif

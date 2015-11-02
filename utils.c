@@ -296,10 +296,10 @@ char to_hex(char code) {
   static char hex[] = "0123456789abcdef";
   return hex[code & 15];
 }
-unsigned hash(const char* key)
+unsigned hash(const char* key, int hash_size)
 {
 	unsigned hashval;
     for (hashval = 0; *key != '\0'; key++)
       hashval = *key + 31 * hashval;
-    return hashval % HASHSIZE;	
+    return hashval % hash_size;	
 }

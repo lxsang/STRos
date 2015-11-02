@@ -53,7 +53,7 @@ void parse_rpc_value(rpc_value_t* l,XMLNode* pnode)
 	}
 	if(node->n_children <= 0) return;
 	node = node->children[0];
-	switch(hash(node->tag))
+	switch(hash(node->tag, HASHSIZE))
 	{
 		case RPC_TYPE_BASE64:
 		list_put_b64(l,node->text);
@@ -134,12 +134,13 @@ char* decode_rpc_data(int client)
 		LOG("Bad data\n");
 		return NULL;
 	}
-	LOG("Content-length: %d\n",clen);
+	//LOG("Content-length: %d\n",clen);
 	// decide what to do with the data
 	//get xml string
-	request = (char*) malloc(clen*sizeof(char));
+	request = (char*) malloc((clen+1)*sizeof(char));
 	for(size_t i = 0; i < clen; ++i)
 		recv(client,(request+i),1,0);
+	request[clen] = '\0';
 	return request;
 }
 char* list_to_xml_params(list l)

@@ -113,3 +113,10 @@ void free_response(rpc_response_t* r)
 		list_free(&r->data);
 	free(r);
 }
+
+char* gen_rpc_response(rpc_value_t* rq)
+{
+	char* xmldoc = list_to_xml_params(rq);
+	xmldoc = __s(XML_RPC_RESP,xmldoc);
+	return __s("%s%s",XML_VER,xmldoc);
+}

@@ -4,6 +4,7 @@
 #include "3rd/xml/sxmlc.h"
 #include "config.h"
 #define REQUEST_PATTERN  "POST /RPC2 HTTP/1.0\r\nHost: stROS\r\nUser-Agent: stROS\r\nContent-Type: text/xml\r\nContent-Length: %d\r\n\r\n%s"
+#define RESPONSE_PATTERN "HTTP/1.0 200 OK\r\nConnection: close\r\nContent-Length: %d\r\nContent-Type: text/xml\r\nServer: %s\r\n%s"
 #define MCALL_TAG		"methodCall"
 #define MNAME_TAG 		"methodName"
 #define MRESP_TAG 		"methodResponse"
@@ -22,6 +23,7 @@
 #define XML_STR			"<string>%s</string>"
 #define XML_ARR			"<array>\r\n<data>\r\n%s</data>\r\n</array>\r\n"
 #define XML_NIL			"<nil/>\r\n"
+#define XML_RPC_RESP	"<methodResponse>\r\n%s\r\n</methodResponse>"
 
 
 #define rpc_value_t item

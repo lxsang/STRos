@@ -17,4 +17,5 @@ void dummy_response(int);
 rpc_response_t* parse_response(int);
 void parse_fault_response(rpc_value_t*,XMLNode*);
 void dump_rpc_response(rpc_response_t* );
+char* gen_rpc_response(rpc_value_t*);
 #endif

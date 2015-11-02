@@ -11,7 +11,7 @@ association dlookup(dictionary dic,const char* key)
 {
 	association np;
 	if(dic == NULL) return NULL;
-    for (np = dic[hash(key)]; np != NULL; np = np->next)
+    for (np = dic[hash(key,DHASHSIZE)]; np != NULL; np = np->next)
     {
     	if(!np || !np->key)
     	{
@@ -31,7 +31,7 @@ association __put_el_with_key(dictionary dic, const char* key)
         np = (association) malloc(sizeof(*np));
         if (np == NULL || (np->key = strdup(key)) == NULL)
           return NULL;
-        hashval = hash(key);
+        hashval = hash(key, DHASHSIZE);
         np->next = dic[hashval];
         dic[hashval] = np;
     }
@@ -47,7 +47,7 @@ association dput(dictionary dic,const char* key, void* value)
 int dremove(dictionary dic, const char* key)
 {
 	if(dic == NULL) return 0;
-	int hashval = hash(key);
+	int hashval = hash(key, DHASHSIZE);
 	association np = dic[hashval];
 	if(np!=NULL && strcmp(key,np->key)==0)
 	{

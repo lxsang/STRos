@@ -26,9 +26,8 @@
 #else
     #define LOG(a,...) do{}while(0)
 #endif
-#define	BUFFLEN 	1024
-#define HASHSIZE 	1024
-#define DHASHSIZE 	50
+#define	BUFFLEN 1024
+#define HASHSIZE 1024
 			
 #define RPC_TYPE_ARRAY	601//hash("array")
 #define RPC_TYPE_BASE64	335//hash("base64")
@@ -55,5 +54,5 @@ char *url_decode(const char *str);
 char *url_encode(const char *str);
 char from_hex(char ch);
 char to_hex(char code);
-unsigned hash(const char*, int);
+unsigned hash(const char*);
 #endif

@@ -2,29 +2,10 @@
 #define STROS_H
 #include "config.h"
 #include "3rd/ini/ini.h"
-#include "dictionary.h"
-#include "request.h"
-#include "response.h"
+#include "api.h"
 
-#define DEFAULT_MASTER "127.0.0.1:11311"
-#define subscriber topic_t;
-#define publisher  topic_t;
-
-typedef struct{
-	char* id;
-	char* api;
-	dictionary subscribers;
-	dictionary publishers;
-	char* master;
-} ros_node_t;
-
-typedef struct{
-	char* topic;
-	char* type;
-	char* api;
-	int event;
-	void* data;
-} topic_t;
+#define DEFAULT_MASTER_URI "127.0.0.1"
+#define DEFAULT_MASTER_PORT 11311
 
 /**
 * The init_node method will start a xmlprc
@@ -33,7 +14,7 @@ typedef struct{
 * a node will not cause the others nodes to stop 
 * working
 */
-void stros_init_node(ros_node_t*, const char*, const char*);
+ros_node_t* stros_init_node(const char*, const char*);
 /*
 * Deploy all subscribes and publishers :
 *	- registe topics (publishers)
@@ -42,7 +23,7 @@ void stros_init_node(ros_node_t*, const char*, const char*);
 *	- run sbscribers in a separe thread
 * use mutex to prevent data race condition
 */
-void stros_node_deploy(ros_node_t);
+void stros_node_deploy(ros_node_t*);
 /**
 * Unregiste all active publishers and subscribers
 * stop all related threads
@@ -52,15 +33,23 @@ void stros_stop(int);
 /**
 * Is the ros client running
 **/
-int stros_ok();
 
+void subscribe_to(ros_node_t*,const char* topic,const char* type,void (*handler)(void*));
 void error_die(const char *);
 void load_config(ros_node_t*,const char*);
 void accept_request(int);
 int xmlprc_startup(unsigned *);
-
+void xmlprc_run(unsigned* );
+void dump_node_info(ros_node_t*);
+void stros_deploy_subscribers(ros_node_t*);
+void subscriber_listener(void*);
+void stros_deploy_publishers(ros_node_t*);
+void spin();
+publisher* create_publisher(ros_node_t* , const char* , const char* );
+void publish(publisher*,void*);
+void publisher_listener(void*);
+publisher* create_publisher(ros_node_t*, const char*, const char*);
 //static char* xmlprc_config;
-static int ros_ok;
+
 // mutex lock
-pthread_mutex_t node_mux;
 #endif
