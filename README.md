@@ -79,5 +79,5 @@ usage :
 ./talker config.ini
 ```
 ## Future work
-- Create a smalltalk wrapper for the api (based on LitleSmalltalk), so the node can be easily and dinamically create
+- Create a smalltalk wrapper for the api (based on LitleSmalltalk), so the node can be easily and dinamically created (without recompilation)
 - Support user defined message type.
