@@ -61,10 +61,11 @@ int main (int argc, char const *argv[])
 }
 ```
 ## ROS node configuration by using INI file
-The node parameters can be easily reconfigure using a config file in INI format. The following parameters are supported :
+The node parameters can be easily reconfigure using a config file in INI format. The following parameters are supported:
 - The Master's URI
 - The Master's port
-- The node name 
+- The node name
+
 For example
 ```
 [MASTER]             
