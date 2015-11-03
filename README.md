@@ -72,7 +72,7 @@ For example
 uri  = 192.168.10.100 ;
 port = 11311 ;
 [NODE]             
-remap = /zoombie ;
+remap = /zombie ;
 ```
 usage :
 ```
