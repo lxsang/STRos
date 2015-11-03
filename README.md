@@ -76,7 +76,7 @@ remap = /zoombie ;
 ```
 usage :
 ```
-talker config.ini
+./talker config.ini
 ```
 ## Future work
 - Create a smalltalk wrapper for the api (based on LitleSmalltalk), so the node can be easily and dinamically create
