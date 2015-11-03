@@ -14,7 +14,7 @@ This is how the chatter example (see on ros tutorial's page) is implemented usin
 
 int main (int argc, char const *argv[])
 {
-  /% create new node, the argv[1] is the parameter file
+  // create new node, the argv[1] is the parameter file
   // that is used to configure the node using the INI syntax 
   // (see below)
 	ros_node_t* node = stros_init_node("/dummy",argv[1]);
@@ -60,3 +60,23 @@ int main (int argc, char const *argv[])
 	return 0;
 }
 ```
+## ROS node configuration by using INI file
+The node parameters can be easily reconfigure using a config file in INI format. The following parameters are supported :
+- The Master's URI
+- The Master's port
+- The node name 
+For example
+```
+[MASTER]             
+uri  = 192.168.10.100 ;
+port = 11311 ;
+[NODE]             
+remap = /zoombie ;
+```
+usage :
+```
+talker config.ini
+```
+## Future work
+- Create a smalltalk wrapper for the api (based on LitleSmalltalk), so the node can be easily and dinamically create
+- Support user defined message type.
