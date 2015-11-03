@@ -60,11 +60,23 @@ void load_config(ros_node_t* node,const char* file)
 	//init_file_system();
 }
 void stros_stop(int dummy) {
+	association assoc;
+	topic_t* tp;
 	LOG("%s","Stopping the node\n");
+	//TODO unregiste all publisher and subscriber
+	for_each_assoc(assoc, xml_prc_server.node->publishers)
+	{
+		tp = (topic_t*) (assoc->value);
+		unregister_publisher(tp);
+	}
+	for_each_assoc(assoc, xml_prc_server.node->subscribers)
+	{
+		tp = (topic_t*) (assoc->value);
+		unregister_subscriber(tp);
+	}
 	stros_toggle(false);
 	pthread_exit(NULL);
 	pthread_mutex_destroy(&node_mux);
-	//TODO unregiste all publisher and subscriber
 	//exit(0);
 }
 void spin()
@@ -184,8 +196,10 @@ void stros_deploy_publishers(ros_node_t* node)
 		{
 			// create new thread for the publisher
 			if (pthread_create(&newthread , NULL,(void *(*)(void *))publisher_listener,(void*) pub ) != 0)
+			{
 				perror("can not start the topic\n");
-				// TODO: we should unregister the publisher here
+				unregister_publisher(pub);
+			}
 			else
 				pthread_detach(newthread) ;
 			LOG("publish %s successful \n",pub->topic);
@@ -197,6 +211,21 @@ void stros_deploy_publishers(ros_node_t* node)
 		list_free(&rq->params);
 		free_response(data);
 	}
+}
+void unregister(topic_t* tp, const char* methd)
+{
+	// send an unregister rpc to master
+	rpc_request_t* rq = malloc(sizeof(rpc_request_t));
+	rpc_response_t* data;
+	rq->method = methd;
+	rq->params = list_init();
+	list_put_s(&rq->params,tp->callerid);
+	list_put_s(&rq->params,tp->topic);
+	list_put_s(&rq->params,xml_prc_server.node->api);
+	char* xml = gen_rpc_call(rq);
+	data = send_post_request(xml_prc_server.node->master_uri, xml_prc_server.node->master_port, xml);
+	if(!data->code)
+		LOG("The master cannot unregister subscriber or publisher of %s \n", tp->topic);
 }
 void publisher_listener(void* data)
 {
@@ -217,7 +246,7 @@ void publisher_listener(void* data)
 	if(sock == -1 || port == 0)
 	{
 		LOG("Cannot run publisher %s\n", pub->topic);
-		// TODO we should unpuregister the topic from the master here
+		unregister_publisher(pub);
 		return;
 	}
 	// modify the publisher
@@ -292,8 +321,10 @@ void stros_deploy_subscribers(ros_node_t* node)
 			//sub->status = TOPIC_REFRESH;
 			// create new thread for the subscribe
 			if (pthread_create(&newthread , NULL,(void *(*)(void *))subscriber_listener,(void*) sub ) != 0)
-				perror("can not start subscriber");
-			//TODO we should unregister the subscriber here
+			{
+					perror("can not start subscriber");
+					unregister_subscriber(sub);
+			}
 			else
 				pthread_detach(newthread) ;
 			LOG("Subscribe to %s successful \n",sub->topic);

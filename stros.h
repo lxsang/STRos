@@ -29,6 +29,8 @@ THE SOFTWARE.
 
 #define DEFAULT_MASTER_URI "127.0.0.1"
 #define DEFAULT_MASTER_PORT 11311
+#define unregister_subscriber(s) (unregister(s,"unregisterSubscriber"))
+#define unregister_publisher(s) (unregister(s,"unregisterPublisher"))
 
 /**
 * The init_node method will start a xmlprc
@@ -72,6 +74,7 @@ publisher* create_publisher(ros_node_t* , const char* , const char* );
 void publish(publisher*,void*);
 void publisher_listener(void*);
 publisher* create_publisher(ros_node_t*, const char*, const char*);
+void unregister(topic_t*, const char* );
 //static char* xmlprc_config;
 
 // mutex lock
