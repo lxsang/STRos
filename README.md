@@ -3,7 +3,7 @@ Minimal ROS compatible client for small embeded systems (support Linux).
 ## Feature
 - Lightweight and independent, can work without ros installed
 - Simple way to create node, public or subscibe to a topic.
-- At the moment, the client support only the standard message type (std_msgs).
+- At the moment, the client supports only the standard message types (std_msgs).
 
 ## Example
 This is how the chatter example (see on ros tutorial's page) is implemented using our API
@@ -60,7 +60,7 @@ int main (int argc, char const *argv[])
 	return 0;
 }
 ```
-## ROS node configuration by using INI file
+## ROS node configuration using INI file
 The node parameters can be easily reconfigure using a config file in INI format. The following parameters are supported:
 - The Master's URI
 - The Master's port
@@ -80,4 +80,4 @@ usage :
 ```
 ## Future work
 - Create a smalltalk wrapper for the api (based on LitleSmalltalk), so the node can be easily and dinamically created (without recompilation)
-- Support user defined message type.
+- Support user defined message types.
