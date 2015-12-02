@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 #include "response.h"
-void bad_request(int client)
+void rpc_bad_request(int client)
 {
 	char buf[1024];
 
@@ -37,7 +37,7 @@ void bad_request(int client)
 	sprintf(buf, "you must respect this protocol.\r\n");
 	send(client, buf, sizeof(buf), 0);
 }
-void dummy_response(int client)
+void rpc_dummy_response(int client)
 {
 	char buf[1024];
 

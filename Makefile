@@ -4,10 +4,13 @@ BUILDIRD=build
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
     PLUGINS_BASE=/root/workspace/ant-http/plugins
+	PF_FLAG=-D_GNU_SOURCE
 endif
 ifeq ($(UNAME_S),Darwin)
 	PLUGINS_BASE=/Users/mrsang/Documents/ushare/cwp/ant-http/plugins
+	PF_FLAG=
 endif
+CFLAGS=-W -Wall -g -std=c99 -D DEBUG $(PF_FLAG)
 PLUGINSDEP = 	$(PLUGINS_BASE)/list.o \
 				$(PLUGINS_BASE)/dictionary.o \
 				$(PLUGINS_BASE)/utils.o

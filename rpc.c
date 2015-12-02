@@ -27,10 +27,10 @@ THE SOFTWARE.
  * @param  sock socket
  * @return      a request string
  */
-char* read_line(int sock)
+char* rpc_read_line(int sock)
 {
 	char buf[MAX_BUFF];
-	read_buf(sock,buf,sizeof(buf));
+	rpc_read_buf(sock,buf,sizeof(buf));
 	return strdup(buf);
 }
 /**
@@ -42,7 +42,7 @@ char* read_line(int sock)
  * @param  size size of buffer
  * @return      number of bytes read
  */
-int read_buf(int sock, char*buf,int size)
+int rpc_read_buf(int sock, char*buf,int size)
 {
 	int i = 0;
 	char c = '\0';
@@ -132,7 +132,7 @@ char* decode_rpc_data(int client)
 	char * token;
 	char* ctype = NULL;
 	int clen = -1;
-	line = read_line(client);
+	line = rpc_read_line(client);
 	while ((strlen(line) > 0) && strcmp("\r\n",line))
 	{
 		token = strsep(&line,":");
@@ -149,7 +149,7 @@ char* decode_rpc_data(int client)
 			trim(token,' ');
 			clen = atoi(token);
 		}
-		line = read_line(client);
+		line = rpc_read_line(client);
 	}
 	free(line);
 	if(ctype == NULL || clen == -1)

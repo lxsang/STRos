@@ -145,7 +145,7 @@ typedef struct{
 	int master_port;
 } ros_node_t;
 
-typedef struct{
+typedef struct _topic_t_{
 	char* callerid;
 	char* topic;
 	char* type;
@@ -153,7 +153,7 @@ typedef struct{
 	int port;
 	int status;
 	void* data;
-	void (*handler)(void*);
+	void (*handler)(void*,struct _topic_t_*);
 } topic_t;
 #define subscriber topic_t
 #define publisher  topic_t

@@ -29,7 +29,7 @@ void parse_request(int client,const char* uri,void (*handler)(int,void*))
 	char* request = decode_rpc_data(client);
 	if(request == NULL)
 	{
-		bad_request(client);
+		rpc_bad_request(client);
 		return;
 	}
 	//printf("Received:\n%s\n",request);
@@ -38,7 +38,7 @@ void parse_request(int client,const char* uri,void (*handler)(int,void*))
 	if(!XMLDoc_parse_buffer_DOM(request,"xmlprc_request",&doc))
 	{
 		LOG("%s","Unable to parser XML request");
-		bad_request(client);
+		rpc_bad_request(client);
 		return;
 	}
 	XMLNode* node;
@@ -47,7 +47,7 @@ void parse_request(int client,const char* uri,void (*handler)(int,void*))
 	if(strcmp(node->tag,MCALL_TAG) != 0)
 	{
 		LOG("%s","Invalid XML request");
-		bad_request(client);
+		rpc_bad_request(client);
 		return;
 	}
 	rpc_request_t* m = parse_rpc_method(node);
@@ -56,14 +56,14 @@ void parse_request(int client,const char* uri,void (*handler)(int,void*))
 	//else
 	{
 		LOG("%s","Fail to parse the method\n");
-		bad_request(client);
+		rpc_bad_request(client);
 		return;
 	}
 	XMLDoc_free(&doc);
 	if(handler == NULL)
 	{
 		LOG("%s","Send a dummy response\n");
-		dummy_response(client);
+		rpc_dummy_response(client);
 		free_request(m);
 		return;
 	}

@@ -59,10 +59,11 @@ void stros_stop(int);
 * Is the ros client running
 **/
 
-void subscribe_to(ros_node_t*,const char* topic,const char* type,void (*handler)(void*));
+void subscribe_to(ros_node_t*,const char* topic,const char* type,void (*handler)(void*, topic_t*));
 void error_die(const char *);
-void load_config(ros_node_t*,const char*);
-void accept_request(int);
+void stros_load_config(ros_node_t*,const char*);
+void stros_set_config(ros_node_t*, const char*, const char*, int);
+void stros_accept_request(int);
 int xmlprc_startup(unsigned *);
 void xmlprc_run(unsigned* );
 void dump_node_info(ros_node_t*);

@@ -29,8 +29,16 @@ void error_die(const char *sc)
 	perror(sc);
 	exit(1);
 }
-
-static int config_handler(void* node, const char* section, const char* name,
+void stros_set_config(ros_node_t* node, const char* name,  const char* uri, int port)
+{
+	if(node)
+	{
+		if(name) node->id = strdup(name);
+		if(uri) node->master_uri = strdup(uri);
+		if(port>0) node->master_port = port;
+	}
+}
+static int stros_config_handler(void* node, const char* section, const char* name,
                    const char* value)
 {
     ros_node_t* pconfig = (ros_node_t*)node;
@@ -47,9 +55,9 @@ static int config_handler(void* node, const char* section, const char* name,
     return 1;
 }
 
-void load_config(ros_node_t* node,const char* file)
+void stros_load_config(ros_node_t* node,const char* file)
 {
-	if (ini_parse(file, config_handler, node) < 0) {
+	if (ini_parse(file, stros_config_handler, node) < 0) {
 		LOG("Can't load '%s'\n. Used defaut configuration", file);
 	}
 	else
@@ -98,18 +106,18 @@ ros_node_t* stros_init_node(const char* name, const char* conf)
 	node->subscribers = dict();
 	node->publishers = dict();
 	if(conf != NULL)
-		load_config(node,conf);
+		stros_load_config(node,conf);
 	node->id = __s("%s_%u",node->id,(unsigned)time(NULL));
 	return node;
 }
-void accept_request(int client)
+void stros_accept_request(int client)
 {
 	char buf[MAX_BUFF];
 	int numchars;
 	char method[255];
 	char url[255];
 	size_t i, j;
-	numchars = read_buf(client, buf, sizeof(buf));
+	numchars = rpc_read_buf(client, buf, sizeof(buf));
 	i = 0; j = 0;
 	while (!IS_SPACE(buf[j]) && (i < sizeof(method) - 1))
 	{
@@ -121,7 +129,7 @@ void accept_request(int client)
 	if (strcasecmp(method, "POST"))
 	{
 		LOG("%s","Bad request");
-		bad_request(client);
+		rpc_bad_request(client);
 		return;
 	}
 	i = 0;
@@ -134,7 +142,7 @@ void accept_request(int client)
 	}
 	url[i] = '\0';
 	if(strcmp(url,RPC_URI) != 0)
-		bad_request(client);
+		rpc_bad_request(client);
 	else
 		parse_request(client, url,xml_rpc_api_handler);
 	close(client);
@@ -145,7 +153,6 @@ void stros_node_deploy(ros_node_t* node)
 	// ignore the broken PIPE error when writing 
 	//or reading to/from a closed socked connection
 	signal(SIGPIPE, SIG_IGN);
-	signal(SIGINT, stros_stop);
 	xml_prc_server.node = node;
 	pthread_mutex_init(&node_mux, NULL);
 	stros_toggle(true);
@@ -456,7 +463,7 @@ void xmlprc_run(unsigned* port)
 		        perror("setsockopt failed\n");
 			/* accept_request(client_sock); */
 			LOG("%s", "Client accepted\n");
-			if (pthread_create(&newthread , NULL,(void *(*)(void *))accept_request, (void *)client_sock) != 0)
+			if (pthread_create(&newthread , NULL,(void *(*)(void *))stros_accept_request, (void *)client_sock) != 0)
 				perror("pthread_create");
 			else
 			{
@@ -499,7 +506,7 @@ int socket_startup(unsigned *port)
 		//error_die("listen");
 	return(httpd);
 }
-void subscribe_to(ros_node_t* node, const char* topic,const char* type,void (*handler)(void*))
+void subscribe_to(ros_node_t* node, const char* topic,const char* type,void (*handler)(void*, topic_t*))
 {
 	subscriber* sub = malloc(sizeof(subscriber));
 	sub->callerid = node->id;

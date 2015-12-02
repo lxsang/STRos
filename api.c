@@ -58,7 +58,7 @@ void xml_rpc_api_handler(int client, void* data)
 	}
 	else
 	{
-		bad_request(client);
+		rpc_bad_request(client);
 	}
 }
 void publish_tcp_data(void* data)
@@ -84,7 +84,7 @@ void publish_tcp_data(void* data)
 		bytes_io = tcp_send_data(conn->pub,client);
 	}while(stros_ok() && conn->pub->status && bytes_io != -1);
 	//LOG("Send to client %s\n", conn->pub->topic);
-	//dummy_response(conn->client);
+	//rpc_dummy_response(conn->client);
 }
 int tcp_send_data(topic_t* tp, int client)
 {
@@ -156,7 +156,7 @@ void tcp_ros_request(const char* ip, int port, subscriber* sub)
 		}
 		// now get the right data format and call the callback
 		data = ros_data(buf, dtype);
-		sub->handler(data);
+		sub->handler(data, sub);
 	} while(bytes_read > 0 && sub->status == TOPIC_ACTIVE && stros_ok()); // should have ros_ok
 	
 	//read all the remain
@@ -339,29 +339,29 @@ void publisherUpdate(rpc_value_t params, int n, int client)
 	list l;
 	if(topic == NULL)
 	{
-		bad_request(client);
+		rpc_bad_request(client);
 		return;
 	}
 	subscriber* sub = (subscriber*)dvalue(xml_prc_server.node->subscribers,topic);
 	if(sub == NULL)
 	{
-		bad_request(client);
+		rpc_bad_request(client);
 		return;
 	}
 	l = list_at(params,2)->value.array;
 	extract_url(sub, l);
-	dummy_response(client);
+	rpc_dummy_response(client);
 }
 void requestTopic(rpc_value_t params, int n, int client)
 {
-	if(n != 3){ bad_request(client);return;}
+	if(n != 3){ rpc_bad_request(client);return;}
 	char* topic = list_at(params,1)->value.s;
-	if(! topic){bad_request(client);return;}
+	if(! topic){rpc_bad_request(client);return;}
 	publisher* pub = (publisher*) dvalue(xml_prc_server.node->publishers,topic);
 	if(!pub)
 	{
 		LOG("Unknow topic: %s\n", topic);
-		bad_request(client);
+		rpc_bad_request(client);
 		return;
 	}
 	// send response

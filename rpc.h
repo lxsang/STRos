@@ -67,8 +67,8 @@ typedef struct {
 
 
 void parse_rpc_value(rpc_value_t*,XMLNode*);
-char* read_line(int);
-int read_buf(int,char*,int);
+char* rpc_read_line(int);
+int rpc_read_buf(int,char*,int);
 char* decode_rpc_data(int);
 char* item_to_xml(item);
 char* list_to_xml_params(list);

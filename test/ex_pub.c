@@ -25,9 +25,10 @@ THE SOFTWARE.
 
 int main (int argc, char const *argv[])
 {
+	signal(SIGINT, stros_stop);
 	ros_node_t* node = stros_init_node("/dummy",argv[1]);
 	// subscribe
-	publisher* pub = create_publisher(node, "/sender", MSG_STRING);
+	publisher* pub = create_publisher(node, "/talker", MSG_STRING);
 	stros_node_deploy(node);
 	
 	char* msg;

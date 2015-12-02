@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 #include "../stros.h"
 
-void callback(void* data)
+void callback(void* data, topic_t* tp)
 {
 	char* msg = (char*) data;
 	LOG("Receive : %s\n", msg);
@@ -31,9 +31,10 @@ void callback(void* data)
 
 int main (int argc, char const *argv[])
 {
+	signal(SIGINT, stros_stop);
 	ros_node_t* node = stros_init_node("/dummy",argv[1]);
 	// subscribe
-	subscribe_to( node,"/sender",MSG_STRING,callback);
+	subscribe_to( node,"/chatter",MSG_STRING,callback);
 	stros_node_deploy(node);
 	printf("Finish deploy\n");
 	spin();

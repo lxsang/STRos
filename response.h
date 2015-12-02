@@ -35,8 +35,8 @@ typedef struct{
 	rpc_value_t data;
 } rpc_response_t;
 
-void bad_request(int);
-void dummy_response(int);
+void rpc_bad_request(int);
+void rpc_dummy_response(int);
 rpc_response_t* parse_response(int);
 void parse_fault_response(rpc_value_t*,XMLNode*);
 void dump_rpc_response(rpc_response_t* );
