@@ -396,6 +396,7 @@ void subscriber_listener(void* data)
 void publish(publisher* pub, void* msg)
 {
 	pthread_mutex_lock (&node_mux);
+	pub->data_ok = TOPIC_DATA_OK;
 	pub->data = msg;
 	pthread_mutex_unlock (&node_mux);
 }
@@ -527,6 +528,7 @@ publisher* create_publisher(ros_node_t* node, const char* topic, const char* typ
 	pub->topic = topic;
 	pub->type = type;
 	pub->status = TOPIC_ACTIVE;
+	pub->data_ok = TOPIC_DATA_NOK;
 	pub->uri = NULL;
 	pub->port = 0;
 	pub->data = "Hello from stros, here";

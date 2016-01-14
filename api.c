@@ -79,8 +79,13 @@ void publish_tcp_data(void* data)
 	bytes_io = send(client, buf, size, 0);
 	
 	if(bytes_io<0) return;
-	do {
-		// send a loop data
+	do { // send a loop data
+		// wait for data to be available
+		while(conn->pub->data_ok == TOPIC_DATA_NOK && conn->pub->status && stros_ok());
+		// mark topic as read
+		pthread_mutex_lock (&node_mux);
+		conn->pub->data_ok = TOPIC_DATA_NOK;
+		pthread_mutex_unlock(&node_mux);
 		bytes_io = tcp_send_data(conn->pub,client);
 	}while(stros_ok() && conn->pub->status && bytes_io != -1);
 	//LOG("Send to client %s\n", conn->pub->topic);
@@ -206,12 +211,12 @@ int verify_ros_header(subscriber* sub, char* header, int hsize)
 		LOG("Wrong topic, expect [%s] but receive [%s]\n", sub->topic, topic);
 		return 0;
 	}
-	if(strcmp(msgtype, sub->type))
+	if(strcmp(msgtype, sub->type)!=0 && strcmp(msgtype,"*") != 0)
 	{
 		LOG("Wrong message type, expect [%s] but receive [%s]\n", sub->type, msgtype);
 		return 0;
 	}
-	if(strcmp(md5sum, md5sum_of(msgtype)) != 0)
+	if(strcmp(md5sum, md5sum_of(msgtype)) != 0 && strcmp(md5sum,"*") != 0)
 	{
 		LOG("Wrong md5sum signature, receive [%s] for type [%s]\n", md5sum, msgtype);
 		return 0;

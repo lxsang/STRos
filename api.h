@@ -135,6 +135,9 @@ THE SOFTWARE.
 #define TOPIC_DOWN		0
 #define TOPIC_REFRESH	2
 
+#define TOPIC_DATA_OK 	1
+#define TOPIC_DATA_NOK	0
+
 
 typedef struct{
 	char* id;
@@ -152,6 +155,7 @@ typedef struct _topic_t_{
 	char* uri;
 	int port;
 	int status;
+	int data_ok;
 	void* data;
 	void (*handler)(void*,struct _topic_t_*);
 } topic_t;
