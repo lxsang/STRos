@@ -21,10 +21,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "utils.h"
+#include "../utils.h"
 
 int main (int argc, char const *argv[])
 {
+	if(argc == 2)
+	{
+		printf("Hash of [%s] is [%d]\n", argv[1], hash(argv[1], HASHSIZE));
+		return 1;
+	}
 	
 	printf("Hash of publisherUpdate %d\n", hash("publisherUpdate", HASHSIZE));
 	printf("Hash of requestTopic %d\n", hash("requestTopic", HASHSIZE));

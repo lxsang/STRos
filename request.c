@@ -108,7 +108,7 @@ int request_socket(const char* ip, int port)
 {
 	int sockfd, bytes_read;
 	struct sockaddr_in dest;
-	char buf[MAX_BUFF];
+	//char buf[MAX_BUFF];
 	char* request;
 	// time out setting
 	struct timeval timeout;      

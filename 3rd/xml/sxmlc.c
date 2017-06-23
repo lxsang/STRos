@@ -157,8 +157,8 @@ int XMLNode_init(XMLNode* node)
 	if (node == NULL)
 		return false;
 	
-	if (node->init_value == XML_INIT_DONE)
-		return true; /*(void)XMLNode_free(node);*/
+	//if (node->init_value == XML_INIT_DONE)
+	//	return true; /*(void)XMLNode_free(node);*/
 
 	node->tag = NULL;
 	node->text = NULL;
@@ -1120,6 +1120,7 @@ parse_err:
 static int _parse_data_SAX(void* in, const DataSourceType in_type, const SAX_Callbacks* sax, SAX_Data* sd)
 {
 	SXML_CHAR *line, *txt_end, *p;
+	line = NULL;
 	XMLNode node;
 	int ret, exit, sz, n0, ncr;
 	TagType tag_type;
@@ -1699,14 +1700,14 @@ int read_line_alloc(void* in, DataSourceType in_type, SXML_CHAR** line, int* sz_
 			(*interest_count)++;
 		/* Reaching EOF before 'to' char is not an error but should trigger 'line' alloc and init to '' */
 		/* If 'from' is '\0', we stop here */
-		if (c == from || c == CEOF || from == NULC)
+		if (c == from || c == (SXML_CHAR)CEOF || from == (SXML_CHAR)NULC)
 			break;
 	}
 	
 	if (sz_line == NULL)
 		sz_line = &init_sz;
 	
-	if (*line == NULL || *sz_line == 0) {
+	if (line == NULL || *line == NULL || *sz_line == 0) {
 		if (*sz_line == 0) *sz_line = MEM_INCR_RLA;
 		*line = (SXML_CHAR*)__malloc(*sz_line*sizeof(SXML_CHAR));
 		if (*line == NULL)
@@ -1717,7 +1718,7 @@ int read_line_alloc(void* in, DataSourceType in_type, SXML_CHAR** line, int* sz_
 		return 0;
 	
 	n = i0;
-	if (c == CEOF) { /* EOF reached before 'to' char => return the empty string */
+	if (c == (SXML_CHAR)CEOF) { /* EOF reached before 'to' char => return the empty string */
 		(*line)[n] = NULC;
 		return meos(in) ? n : 0; /* Error if not EOF */
 	}
@@ -1729,7 +1730,7 @@ int read_line_alloc(void* in, DataSourceType in_type, SXML_CHAR** line, int* sz_
 		c = (SXML_CHAR)mgetc(in);
 		if (interest_count != NULL && c == interest)
 			(*interest_count)++;
-		if (c == CEOF) { /* EOF or error */
+		if (c == (SXML_CHAR)CEOF) { /* EOF or error */
 			(*line)[n] = NULC;
 			ret = meos(in) ? n : 0;
 			break;

@@ -21,31 +21,41 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "../list.h"
+#ifndef LIST_H
+#define LIST_H
+#include "utils.h"
+#define list item
+typedef struct __item{
+	int type;
+	union{
+		int 			i;
+		int 			b;
+		char* 			s;
+		double 			d;
+		char* 			date;
+		char* 			b64;
+		struct __item* 	array;
+	} value;
+	struct __item* next;
+}*item;
 
-int main (int argc, char const *argv[])
-{
-	list l = list_init();
-	printf("empty list : %s\n", as_string(l));
-	// add some element
-	//0
-	list_put_i(&l,45);//0
-	list_put_s(&l,"hello");//1
-	list_put_date(&l,"dateTime.iso8601");//2
-	list_put_b64(&l,"G48GFGFGF3FGFG3");
-	list_put_d(&l,-1.2365);
-	list_put_b(&l, true);
-	list l1 = split("12,-34.567,this is a string",",");
-	list_put_array(&l,l1);
-	printf("list size: %d\n", list_size(l));
-	printf("List : %s\n", as_string(l));
-	printf("List at 6 %s\n",as_string(list_at(l,6)));
-	//try to remove an item
-	list_remove(l,3);
-	printf("list size: %d\n", list_size(l));
-	printf("List : %s\n", as_string(l));
-	printf("List at 3 %s\n",as_string(list_at(l,3)));
-	printf("Last item %s\n",as_string(list_last(l)));
-	list_free(&l);
-	return 0;
-}
+list list_init();
+void list_put(list*,item);
+void list_put_i(list*,int);
+void list_put_d(list*,double);
+void list_put_b(list*,int);
+void list_put_b64(list*,const char*);
+void list_put_date(list*,const char*);
+void list_put_s(list*,const char*);
+void list_put_array(list*,list);
+item list_last(list);
+int list_remove(list,int);
+int list_size(list);
+item list_at(list,int);
+int list_empty(list);
+item list_item(int type);
+list split(const char*, const char*);
+char* as_string(list);
+void list_put_special(list*, const char*);
+void list_free(list *);
+#endif
