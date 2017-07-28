@@ -114,7 +114,7 @@ int request_socket(const char* ip, int port)
 	struct timeval timeout;      
 	timeout.tv_sec = CONN_TIME_OUT_S;
 	timeout.tv_usec = 0;
-	if ( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 )
+	if ( (sockfd = socket(PF_INET, SOCK_STREAM, 0)) < 0 )// PF_INET instead of AF
 	{
 		perror("Socket");
 		return -1;
